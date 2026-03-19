@@ -19,8 +19,8 @@ public interface CarRepository extends JpaRepository<Car, Long> {
     boolean existsByVin(String vin);
 
     @Query("SELECT c FROM Car c WHERE c.status = 'AVAILABLE' AND " +
-            "(:make IS NULL OR LOWER(c.make) = LOWER(:make)) AND " +
-            "(:model IS NULL OR LOWER(c.model) LIKE LOWER(CONCAT('%', :model, '%'))) AND " +
+            "(:make IS NULL OR c.make = :make) AND " +
+            "(:model IS NULL OR c.model LIKE %:model%) AND " +
             "(:minPrice IS NULL OR c.price >= :minPrice) AND " +
             "(:maxPrice IS NULL OR c.price <= :maxPrice) AND " +
             "(:year IS NULL OR c.year >= :year)")

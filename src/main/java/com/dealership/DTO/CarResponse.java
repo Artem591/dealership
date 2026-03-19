@@ -3,6 +3,7 @@ package com.dealership.DTO;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -24,4 +25,5 @@ public class CarResponse {
     private Boolean isNew;
     private String description;
     private LocalDateTime createdAt;
+    private List<CarImageDTO> images;
 }

@@ -45,7 +45,7 @@ public class Car {
     private Integer power;
 
     @Enumerated(EnumType.STRING)
-    private CarStatus status; // AVAILABLE, RESERVED, SOLD
+    private CarStatus status;
 
     @Column(name = "is_new")
     private Boolean isNew = true;
@@ -59,7 +59,7 @@ public class Car {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "car", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "car", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     private List<CarImage> images = new ArrayList<>();
 

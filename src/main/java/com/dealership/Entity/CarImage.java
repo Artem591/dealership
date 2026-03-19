@@ -10,6 +10,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class CarImage {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -18,11 +19,11 @@ public class CarImage {
     @JoinColumn(name = "car_id", nullable = false)
     private Car car;
 
-    @Column(name = "image_url", nullable = false)
+    @Column(name = "image_url", length = 255)
     private String imageUrl;
 
-    @Column(name = "image_type")
-    private String imageType;
+    @Column(name = "image_type", length = 255)
+    private String imageType; // MAIN, GALLERY, EXTERIOR, INTERIOR
 
     @Column(name = "sort_order")
     private Integer sortOrder = 0;

@@ -1,6 +1,7 @@
 package com.dealership.Controller;
 
 import com.dealership.DTO.ApiResponse;
+import com.dealership.DTO.CarImageDTO;
 import com.dealership.DTO.CarRequest;
 import com.dealership.DTO.CarResponse;
 import com.dealership.Service.CarService;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/cars")
@@ -44,6 +46,11 @@ public class CarController {
     @GetMapping("/{id}")
     public ResponseEntity<CarResponse> getCar(@PathVariable Long id) {
         return ResponseEntity.ok(carService.getCarById(id));
+    }
+
+    @GetMapping("/{id}/images")
+    public ResponseEntity<List<CarImageDTO>> getCarImages(@PathVariable Long id) {
+        return ResponseEntity.ok(carService.getCarImages(id));
     }
 
     @PostMapping
