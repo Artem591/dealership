@@ -23,7 +23,7 @@ public class CarImage {
     private String imageUrl;
 
     @Column(name = "image_type", length = 255)
-    private String imageType; // MAIN, GALLERY, EXTERIOR, INTERIOR
+    private String imageType;
 
     @Column(name = "sort_order")
     private Integer sortOrder = 0;

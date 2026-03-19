@@ -30,10 +30,10 @@ public class Lead {
     private Car car;
 
     @Enumerated(EnumType.STRING)
-    private LeadType type; // TEST_DRIVE, PURCHASE, TRADE_IN
+    private LeadType type;
 
     @Enumerated(EnumType.STRING)
-    private LeadStatus status; // NEW, CONTACTED, NEGOTIATION, CLOSED
+    private LeadStatus status;
 
     private String source;
 
