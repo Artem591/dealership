@@ -38,15 +38,19 @@ export default function Register() {
     setLoading(true);
 
     try {
-      await api.post('/auth/register', {
+      const response = await api.post('/auth/register', {
         email: formData.email,
         password: formData.password,
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phone,
-        role: 'CLIENT',
       });
-      navigate('/login');
+
+      localStorage.setItem('token', response.data.token);
+
+      window.dispatchEvent(new Event('storage'));
+
+      navigate('/');
     } catch (err) {
       setError('Ошибка регистрации. Возможно, email уже занят.');
     } finally {
@@ -153,7 +157,7 @@ export default function Register() {
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
                 tabIndex={-1}
               >
-                {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
           </div>

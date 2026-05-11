@@ -5,20 +5,14 @@ import com.dealership.DTO.AuthResponse;
 import com.dealership.Entity.Role;
 import com.dealership.Entity.User;
 import com.dealership.Repository.UserRepository;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
+import com.dealership.util.JwtUtil;  // ← ИМПОРТ
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.crypto.SecretKey;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.springframework.data.projection.EntityProjection.ProjectionType.DTO;
+import java.util.Collections;
 
 @Service
 @RequiredArgsConstructor
@@ -26,9 +20,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
-    private static final SecretKey JWT_SECRET = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-    private static final long JWT_EXPIRATION = 24 * 60 * 60 * 1000; // 24 часа
+    private final JwtUtil jwtUtil;
 
     @Transactional(readOnly = true)
     public AuthResponse login(AuthRequest request) {
@@ -39,7 +31,13 @@ public class AuthService {
             throw new RuntimeException("Invalid password");
         }
 
-        String token = generateToken(user);
+        String token = jwtUtil.generateToken(
+                new org.springframework.security.core.userdetails.User(
+                        user.getEmail(),
+                        user.getPasswordHash(),
+                        Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
+                )
+        );
 
         return AuthResponse.builder()
                 .token(token)
@@ -68,7 +66,13 @@ public class AuthService {
 
         userRepository.save(user);
 
-        String token = generateToken(user);
+        String token = jwtUtil.generateToken(
+                new org.springframework.security.core.userdetails.User(
+                        user.getEmail(),
+                        user.getPasswordHash(),
+                        Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
+                )
+        );
 
         return AuthResponse.builder()
                 .token(token)
@@ -77,20 +81,5 @@ public class AuthService {
                 .lastName(user.getLastName())
                 .role(user.getRole().name())
                 .build();
-    }
-
-    private String generateToken(User user) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("userId", user.getId());
-        claims.put("email", user.getEmail());
-        claims.put("role", user.getRole().name());
-
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(user.getEmail())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + JWT_EXPIRATION))
-                .signWith(JWT_SECRET)
-                .compact();
     }
 }

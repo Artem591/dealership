@@ -18,7 +18,11 @@ export default function Login() {
 
     try {
       const response = await api.post('/auth/login', { email, password });
+
       localStorage.setItem('token', response.data.token);
+
+      window.dispatchEvent(new Event('storage'));
+
       navigate('/');
     } catch (err) {
       setError('Неверный email или пароль');
@@ -44,7 +48,7 @@ export default function Login() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email
+              Электронная почта
             </label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -79,7 +83,7 @@ export default function Login() {
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
                 tabIndex={-1}
               >
-                {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
           </div>

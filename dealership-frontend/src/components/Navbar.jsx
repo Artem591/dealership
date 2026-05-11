@@ -1,26 +1,40 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Car, User, LogOut, Shield } from 'lucide-react';
+import { Car, User, LogOut } from 'lucide-react';
 
 export default function Navbar() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState(null);
   const navigate = useNavigate();
 
+  // Проверяем токен при загрузке и при изменениях
   useEffect(() => {
-    // Получаем роль из токена или localStorage
+    checkAuth();
+
+    // Слушаем изменения в localStorage (для других вкладок)
+    window.addEventListener('storage', checkAuth);
+    return () => window.removeEventListener('storage', checkAuth);
+  }, []);
+
+  const checkAuth = () => {
     const token = localStorage.getItem('token');
     if (token) {
+      setIsLoggedIn(true);
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         setUserRole(payload.role);
       } catch (e) {
         console.error('Ошибка декодирования токена', e);
       }
+    } else {
+      setIsLoggedIn(false);
+      setUserRole(null);
     }
-  }, []);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    setIsLoggedIn(false);
     setUserRole(null);
     navigate('/');
   };
@@ -42,15 +56,14 @@ export default function Navbar() {
               Каталог
             </Link>
 
-            {/* Админ-панель — только для ADMIN */}
-            {userRole === 'ADMIN' && (
-              <Link to="/admin" className="text-gray-700 hover:text-blue-600 font-medium text-lg flex items-center gap-1">
-                <Shield size={18} />
+            {/* Админ-панель — только для ADMIN и MANAGER */}
+            {(userRole === 'ADMIN' || userRole === 'MANAGER') && (
+              <Link to="/admin" className="text-gray-700 hover:text-blue-600 font-medium text-lg">
                 Админка
               </Link>
             )}
 
-            {userRole ? (
+            {isLoggedIn ? (
               <>
                 <Link to="/profile" className="flex items-center gap-2 text-gray-700 hover:text-blue-600 font-medium text-lg">
                   <User size={20} />
