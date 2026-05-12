@@ -1,15 +1,16 @@
 package com.dealership.Controller;
 
-import com.dealership.DTO.ApiResponse;
-import com.dealership.DTO.CarImageDTO;
-import com.dealership.DTO.CarRequest;
-import com.dealership.DTO.CarResponse;
+import com.dealership.DTO.*;
+import com.dealership.Entity.User;
+import com.dealership.Repository.UserRepository;
 import com.dealership.Service.CarService;
+import com.dealership.Service.LeadService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -21,6 +22,8 @@ import java.util.List;
 public class CarController {
 
     private final CarService carService;
+    private final UserRepository userRepository;
+    private final LeadService leadService;
 
     @GetMapping
     public ResponseEntity<Page<CarResponse>> getAllCars(Pageable pageable) {
@@ -67,5 +70,18 @@ public class CarController {
     public ResponseEntity<Void> deleteCar(@PathVariable Long id) {
         carService.deleteCar(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/lead")
+    public ResponseEntity<ApiResponse> createLead(
+            @PathVariable Long id,
+            @RequestBody LeadRequest request) {
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+
+        leadService.createLead(id, user.getId(), request);
+        return ResponseEntity.ok(ApiResponse.success("Заявка успешно создана!"));
     }
 }

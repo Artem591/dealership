@@ -1,81 +1,77 @@
 import { useState, useEffect } from 'react';
-import { Heart, Car, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Heart, ArrowRight } from 'lucide-react';
+import api from '../service/api';
 
 export default function Favorites() {
-  const [favorites, setFavorites] = useState([]);
+  const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadFavorites();
   }, []);
 
-  const loadFavorites = () => {
-    const saved = localStorage.getItem('favorites');
-    setFavorites(saved ? JSON.parse(saved) : []);
-    setLoading(false);
+  const loadFavorites = async () => {
+    try {
+      const res = await api.get('/favorites?page=0&size=20');
+      setCars(res.data.data.content || res.data.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const removeFromFavorites = (carId) => {
-    const updated = favorites.filter(c => c.id !== carId);
-    setFavorites(updated);
-    localStorage.setItem('favorites', JSON.stringify(updated));
-  };
-
-  if (loading) return <div className="p-8 text-center text-xl">Загрузка...</div>;
+  if (loading) return <div className="p-8 text-center">Загрузка...</div>;
 
   return (
-    <div className="max-w-6xl mx-auto px-8 py-12">
-      <h1 className="text-4xl font-bold mb-8 flex items-center gap-3">
-        <Heart size={36} className="text-red-600" />
-        Избранное
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-6 flex items-center gap-3">
+        <Heart className="fill-red-500 text-red-500" />
+        Избранные автомобили
       </h1>
 
-      {favorites.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-          <Heart size={64} className="mx-auto text-gray-300 mb-4" />
-          <h2 className="text-2xl font-bold text-gray-700 mb-2">Список избранного пуст</h2>
-          <p className="text-gray-600 mb-6">Добавляйте автомобили в избранное, чтобы не потерять</p>
-          <Link to="/cars" className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition">
-            Перейти в каталог
+      {cars.length === 0 ? (
+        <div className="text-center py-20 bg-gray-50 rounded-xl">
+          <p className="text-gray-500 text-lg mb-4">В избранном пока пусто</p>
+          <Link to="/cars" className="text-blue-600 font-medium hover:underline">
+            Перейти в каталог →
           </Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {favorites.map(car => (
-            <div key={car.id} className="bg-white border-2 rounded-xl overflow-hidden hover:shadow-2xl transition">
-              <div className="h-56 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center relative">
-                <Car className="text-gray-400" size={80} />
-                <button
-                  onClick={() => removeFromFavorites(car.id)}
-                  className="absolute top-4 right-4 bg-white p-2 rounded-full shadow hover:bg-red-50 transition"
-                >
-                  <Trash2 size={20} className="text-red-600" />
-                </button>
-              </div>
-              <div className="p-6">
-                <h3 className="text-2xl font-bold mb-3">{car.make} {car.model}</h3>
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Год:</span>
-                    <span className="font-bold">{car.year}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Пробег:</span>
-                    <span className="font-bold">{car.mileage?.toLocaleString()} км</span>
-                  </div>
+          {cars.map(car => (
+            <div key={car.id} className="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden">
+              <div className="h-48 bg-gray-200 relative">
+                {car.images?.length > 0 ? (
+                  <img
+                    src={car.images[0].imageUrl}
+                    alt={`${car.make} ${car.model}`}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400">Нет фото</div>
+                )}
+                <div className="absolute top-3 right-3 bg-white p-2 rounded-full shadow">
+                  <Heart size={20} className="fill-red-500 text-red-500" />
                 </div>
-                <div className="flex justify-between items-center pt-4 border-t">
-                  <span className="text-3xl font-bold text-green-600">
+              </div>
+
+              <div className="p-4">
+                <h3 className="font-bold text-lg mb-1">{car.make} {car.model}</h3>
+                <p className="text-gray-500 text-sm mb-3">{car.year} • {car.mileage} км</p>
+
+                <div className="flex justify-between items-center">
+                  <span className="text-xl font-bold text-green-600">
                     {car.price?.toLocaleString('ru-RU')} ₽
                   </span>
+                  <Link
+                    to={`/cars/${car.id}`}
+                    className="flex items-center gap-1 text-blue-600 font-medium hover:text-blue-800"
+                  >
+                    Подробнее <ArrowRight size={16} />
+                  </Link>
                 </div>
-                <Link
-                  to={`/cars/${car.id}`}
-                  className="block mt-4 bg-blue-600 text-white text-center px-4 py-3 rounded-lg hover:bg-blue-700 transition font-medium"
-                >
-                  Подробнее
-                </Link>
               </div>
             </div>
           ))}

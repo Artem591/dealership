@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { FileText, Car, Calendar, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Clock, CheckCircle, XCircle, AlertCircle, ArrowRight } from 'lucide-react';
 import api from '../service/api';
 
 export default function MyLeads() {
@@ -12,99 +13,87 @@ export default function MyLeads() {
 
   const loadLeads = async () => {
     try {
-      const response = await api.get('/leads/my');
-      setLeads(response.data);
-    } catch (error) {
-      console.error('Ошибка загрузки заявок:', error);
+      const res = await api.get('/leads/my?page=0&size=50');
+      setLeads(res.data.data.content || res.data.data);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'NEW': return 'bg-blue-100 text-blue-800';
-      case 'CONTACTED': return 'bg-yellow-100 text-yellow-800';
-      case 'NEGOTIATION': return 'bg-purple-100 text-purple-800';
-      case 'APPROVED': return 'bg-green-100 text-green-800';
-      case 'CLOSED': return 'bg-gray-100 text-gray-800';
-      case 'REJECTED': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'NEW': return <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 flex items-center gap-1"><Clock size={12} /> Новая</span>;
+      case 'CONTACTED': return <span className="px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 flex items-center gap-1"><AlertCircle size={12} /> На связи</span>;
+      case 'APPROVED': return <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 flex items-center gap-1"><CheckCircle size={12} /> Одобрена</span>;
+      case 'REJECTED': return <span className="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 flex items-center gap-1"><XCircle size={12} /> Отклонена</span>;
+      case 'CLOSED': return <span className="px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700">Закрыта</span>;
+      default: return <span className="px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700">{status}</span>;
     }
   };
 
-  const getStatusText = (status) => {
-    const statuses = {
-      'NEW': 'Новая',
-      'CONTACTED': 'На рассмотрении',
-      'NEGOTIATION': 'Переговоры',
-      'APPROVED': 'Одобрена',
-      'CLOSED': 'Закрыта',
-      'REJECTED': 'Отклонена'
-    };
-    return statuses[status] || status;
+  const getTypeText = (type) => {
+    if (type === 'TEST_DRIVE') return 'Тест-драйв';
+    if (type === 'PURCHASE') return 'Покупка';
+    if (type === 'TRADE_IN') return 'Trade-in';
+    return type;
   };
 
-  if (loading) return <div className="p-8 text-center text-xl">Загрузка...</div>;
+  if (loading) return <div className="p-8 text-center">Загрузка...</div>;
 
   return (
-    <div className="max-w-6xl mx-auto px-8 py-12">
-      <h1 className="text-4xl font-bold mb-8 flex items-center gap-3">
-        <FileText size={36} className="text-blue-600" />
-        Мои заявки
-      </h1>
+    <div className="max-w-5xl mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">Мои заявки</h1>
 
       {leads.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-          <FileText size={64} className="mx-auto text-gray-300 mb-4" />
-          <h2 className="text-2xl font-bold text-gray-700 mb-2">У вас пока нет заявок</h2>
-          <p className="text-gray-600 mb-6">Оставьте заявку на понравившийся автомобиль</p>
-          <a href="/cars" className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition">
-            Перейти в каталог
-          </a>
+        <div className="text-center py-20 bg-white rounded-2xl shadow">
+          <p className="text-gray-500 text-lg mb-4">У вас пока нет заявок</p>
+          <Link to="/cars" className="text-blue-600 font-medium hover:underline">Перейти в каталог</Link>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {leads.map(lead => (
-            <div key={lead.id} className="bg-white rounded-xl shadow-lg p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-xl font-bold mb-2">
-                    {lead.car?.make} {lead.car?.model}
-                  </h3>
-                  <div className="flex items-center gap-4 text-gray-600">
-                    <span className="flex items-center gap-2">
-                      <Calendar size={18} />
-                      {new Date(lead.createdAt).toLocaleDateString('ru-RU')}
-                    </span>
-                    <span className="flex items-center gap-2">
-                      <Clock size={18} />
-                      {new Date(lead.createdAt).toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'})}
-                    </span>
-                  </div>
-                </div>
-                <span className={`px-4 py-2 rounded-full font-medium ${getStatusColor(lead.status)}`}>
-                  {getStatusText(lead.status)}
-                </span>
-              </div>
+            <div
+              key={lead.id}
+              className={`bg-white rounded-xl shadow p-6 border-l-4 transition hover:shadow-md ${
+                lead.status !== 'NEW' && lead.status !== 'CLOSED'
+                  ? 'border-yellow-400 bg-yellow-50/30'
+                  : 'border-transparent'
+              }`}
+            >
+              <div className="flex flex-col md:flex-row justify-between gap-4">
 
-              <div className="border-t pt-4">
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <span className="text-sm text-gray-600">Тип заявки:</span>
-                    <p className="font-medium">{lead.type === 'TEST_DRIVE' ? 'Тест-драйв' : lead.type === 'PURCHASE' ? 'Покупка' : 'Trade-in'}</p>
+                <div className="flex-1">
+                  <div className="text-sm text-gray-500 mb-1">Автомобиль:</div>
+                  <div className="font-bold text-lg text-gray-800 flex items-center gap-2">
+                    {lead.carMake} {lead.carModel}
+                    {lead.status !== 'NEW' && lead.status !== 'CLOSED' && (
+                      <span className="text-[10px] px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full border border-yellow-200 font-bold uppercase tracking-wide">
+                        Есть ответ
+                      </span>
+                    )}
                   </div>
-                  <div>
-                    <span className="text-sm text-gray-600">Источник:</span>
-                    <p className="font-medium">{lead.source || 'Сайт'}</p>
+                  <div className="text-sm text-gray-600 mt-1">Тип: {getTypeText(lead.type)}</div>
+                </div>
+
+                <div className="flex flex-col items-start md:items-end gap-2">
+                  <div className="text-sm text-gray-500">Статус:</div>
+                  {getStatusBadge(lead.status)}
+
+                  {lead.comment && (
+                    <div className="mt-2 text-sm bg-white p-2 rounded border border-gray-200 max-w-xs italic text-gray-600">
+                      "{lead.comment}"
+                    </div>
+                  )}
+                </div>
+
+                <div className="text-right min-w-[100px]">
+                  <div className="text-xs text-gray-400">Создана:</div>
+                  <div className="text-sm font-medium">
+                    {new Date(lead.createdAt).toLocaleDateString()}
                   </div>
                 </div>
-                {lead.comment && (
-                  <div>
-                    <span className="text-sm text-gray-600">Комментарий:</span>
-                    <p className="text-gray-700">{lead.comment}</p>
-                  </div>
-                )}
               </div>
             </div>
           ))}

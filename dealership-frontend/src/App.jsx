@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import './AppStyles.css';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import CarList from './pages/CarList';
@@ -11,6 +12,8 @@ import Favorites from './pages/Favorites';
 import About from './pages/About';
 import Contacts from './pages/Contacts';
 import NotFound from './pages/NotFound';
+import AdminLeads from './pages/AdminLeads';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -22,9 +25,40 @@ function App() {
         <Route path="/cars/:id" element={<CarDetail />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/profile" element={<UserProfile />} />
-        <Route path="/my-leads" element={<MyLeads />} />
-        <Route path="/favorites" element={<Favorites />} />
+
+        <Route path="/profile" element={
+          <ProtectedRoute requiredRoles={['CLIENT', 'ADMIN', 'MANAGER']}>
+            <UserProfile />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/my-leads" element={
+          <ProtectedRoute requiredRoles={['CLIENT', 'ADMIN', 'MANAGER']}>
+            <MyLeads />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/favorites" element={
+          <ProtectedRoute requiredRoles={['CLIENT', 'ADMIN', 'MANAGER']}>
+            <Favorites />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/admin/leads" element={
+          <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER']}>
+            <AdminLeads />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/admin" element={
+          <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER']}>
+            <div className="p-8 text-center">
+              <h1 className="text-3xl font-bold">Админ-панель</h1>
+              <p className="text-gray-600 mt-4">Здесь будет управление системой</p>
+            </div>
+          </ProtectedRoute>
+        } />
+
         <Route path="/about" element={<About />} />
         <Route path="/contacts" element={<Contacts />} />
         <Route path="*" element={<NotFound />} />
