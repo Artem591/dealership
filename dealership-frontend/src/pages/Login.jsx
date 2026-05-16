@@ -17,13 +17,13 @@ export default function Login() {
     setLoading(true);
 
     try {
+
       const response = await api.post('/auth/login', { email, password });
-
       localStorage.setItem('token', response.data.token);
-
+      localStorage.setItem('userRole', response.data.role);
       window.dispatchEvent(new Event('storage'));
-
       navigate('/');
+
     } catch (err) {
       setError('Неверный email или пароль');
     } finally {

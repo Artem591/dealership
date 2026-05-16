@@ -7,8 +7,19 @@ export default function AdminLeads() {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('ALL');
+  const [currentUserEmail, setCurrentUserEmail] = useState('');
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const email = payload.sub || payload.email || '';
+        setCurrentUserEmail(email);
+      } catch (e) {
+        console.error('Ошибка получения текущего пользователя:', e);
+      }
+    }
     loadLeads();
   }, []);
 
@@ -26,11 +37,19 @@ export default function AdminLeads() {
   const updateStatus = async (leadId, newStatus) => {
     try {
       await api.put(`/leads/${leadId}/status?status=${newStatus}`);
-      await loadLeads(); // Обновляем список
+      await loadLeads();
     } catch (err) {
       alert('Ошибка при обновлении статуса');
     }
   };
+
+  const filteredLeads = leads.filter(lead => {
+    if (filter === 'MY') {
+      return lead.clientEmail === currentUserEmail;
+    }
+    if (filter === 'ALL') return true;
+    return lead.status === filter;
+  });
 
   const getStatusColor = (status) => {
     const colors = {
@@ -63,10 +82,6 @@ export default function AdminLeads() {
     return texts[type] || type;
   };
 
-  const filteredLeads = filter === 'ALL'
-    ? leads
-    : leads.filter(lead => lead.status === filter);
-
   if (loading) return <div className="p-8 text-center">Загрузка...</div>;
 
   return (
@@ -75,32 +90,71 @@ export default function AdminLeads() {
         <h1 className="text-3xl font-bold mb-4">Управление заявками</h1>
 
         <div className="flex gap-2 flex-wrap">
-          {['ALL', 'NEW', 'CONTACTED', 'APPROVED', 'REJECTED'].map(status => (
-            <button
-              key={status}
-              onClick={() => setFilter(status)}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
-                filter === status
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              {status === 'ALL' ? 'Все' : getStatusText(status)}
-            </button>
-          ))}
+          <button
+            onClick={() => setFilter('ALL')}
+            className={`px-4 py-2 rounded-lg font-medium transition ${
+              filter === 'ALL' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Все
+          </button>
+
+          <button
+            onClick={() => setFilter('MY')}
+            className={`px-4 py-2 rounded-lg font-medium transition ${
+              filter === 'MY' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Мои
+          </button>
+
+          <button
+            onClick={() => setFilter('NEW')}
+            className={`px-4 py-2 rounded-lg font-medium transition ${
+              filter === 'NEW' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Новая
+          </button>
+
+          <button
+            onClick={() => setFilter('CONTACTED')}
+            className={`px-4 py-2 rounded-lg font-medium transition ${
+              filter === 'CONTACTED' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            На связи
+          </button>
+
+          <button
+            onClick={() => setFilter('APPROVED')}
+            className={`px-4 py-2 rounded-lg font-medium transition ${
+              filter === 'APPROVED' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Одобрена
+          </button>
+
+          <button
+            onClick={() => setFilter('REJECTED')}
+            className={`px-4 py-2 rounded-lg font-medium transition ${
+              filter === 'REJECTED' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Отклонена
+          </button>
         </div>
       </div>
 
       <div className="space-y-4">
         {filteredLeads.length === 0 ? (
           <div className="text-center text-gray-500 py-12">
-            Заявок не найдено
+            {filter === 'MY' ? 'У вас пока нет заявок' : 'Заявок не найдено'}
           </div>
         ) : (
           filteredLeads.map(lead => (
             <div key={lead.id} className="bg-white rounded-xl shadow p-6">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {/* Информация о клиенте */}
                 <div>
                   <h3 className="font-bold text-lg mb-2">
                     {lead.clientFirstName} {lead.clientLastName}
@@ -123,9 +177,7 @@ export default function AdminLeads() {
 
                 <div>
                   <div className="text-sm text-gray-500 mb-1">Автомобиль:</div>
-                  <div className="font-medium">
-                    {lead.carMake} {lead.carModel}
-                  </div>
+                  <div className="font-medium">{lead.carMake} {lead.carModel}</div>
                   <div className="text-sm text-gray-600 mt-2">
                     Тип заявки: <span className="font-medium">{getTypeText(lead.type)}</span>
                   </div>
@@ -153,7 +205,7 @@ export default function AdminLeads() {
                           onClick={() => updateStatus(lead.id, 'CONTACTED')}
                           className="flex items-center gap-1 px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition text-sm"
                         >
-                          <Phone size={14} /> На связи
+                          <Phone size={14} /> На связь
                         </button>
                         <button
                           onClick={() => updateStatus(lead.id, 'REJECTED')}

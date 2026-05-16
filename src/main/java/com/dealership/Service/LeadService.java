@@ -9,25 +9,35 @@ import com.dealership.Repository.LeadRepository;
 import com.dealership.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class LeadService {
-
     private final LeadRepository leadRepository;
     private final CarRepository carRepository;
     private final UserRepository userRepository;
     private final LeadMapper leadMapper;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Transactional(readOnly = true)
     public Page<LeadResponse> getAllLeads(Pageable pageable) {
-        return leadRepository.findAll(pageable).map(leadMapper::toResponse);
+        Pageable sortedByNewest = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+        return leadRepository.findAll(sortedByNewest).map(leadMapper::toResponse);
     }
 
     @Transactional(readOnly = true)
@@ -35,7 +45,13 @@ public class LeadService {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User client = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
-        return leadRepository.findByClientId(client.getId(), pageable)
+
+        Pageable sortedByNewest = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+        return leadRepository.findByClientId(client.getId(), sortedByNewest)
                 .map(leadMapper::toResponse);
     }
 
@@ -64,14 +80,36 @@ public class LeadService {
                 .build();
 
         leadRepository.save(lead);
+
+        Map<String, Object> notification = new HashMap<>();
+        notification.put("leadId", lead.getId());
+        notification.put("carId", car.getId());
+        notification.put("carMakeModel", car.getMake() + " " + car.getModel());
+        notification.put("clientName", client.getFirstName() + " " + client.getLastName());
+        notification.put("timestamp", LocalDateTime.now());
+
+        messagingTemplate.convertAndSend("/topic/leads/new", (Object) notification);
     }
 
     @Transactional
     public void updateStatus(Long leadId, LeadStatus newStatus) {
         Lead lead = leadRepository.findById(leadId)
                 .orElseThrow(() -> new RuntimeException("Заявка не найдена"));
+
         lead.setStatus(newStatus);
         lead.setUpdatedAt(LocalDateTime.now());
-        leadRepository.save(lead);
+        Lead updated = leadRepository.save(lead);
+
+        Map<String, Object> notification = new HashMap<>();
+        notification.put("leadId", updated.getId());
+        notification.put("newStatus", newStatus.name());
+        notification.put("timestamp", LocalDateTime.now());
+
+        String clientEmail = updated.getClient().getEmail();
+        messagingTemplate.convertAndSendToUser(
+                clientEmail,
+                "/queue/lead-updates",
+                (Object) notification
+        );
     }
 }

@@ -46,11 +46,10 @@ export default function Register() {
         phone: formData.phone,
       });
 
-      localStorage.setItem('token', response.data.token);
-
-      window.dispatchEvent(new Event('storage'));
-
-      navigate('/');
+     localStorage.setItem('token', response.data.token);
+     localStorage.setItem('userRole', response.data.role);
+     window.dispatchEvent(new Event('storage'));
+     navigate('/');
     } catch (err) {
       setError('Ошибка регистрации. Возможно, email уже занят.');
     } finally {

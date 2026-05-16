@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Clock, CheckCircle, XCircle, AlertCircle, ArrowRight } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import api from '../service/api';
 
 export default function MyLeads() {
@@ -14,7 +14,7 @@ export default function MyLeads() {
   const loadLeads = async () => {
     try {
       const res = await api.get('/leads/my?page=0&size=50');
-      setLeads(res.data.data.content || res.data.data);
+      setLeads(res.data.data?.content || res.data.data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -45,7 +45,6 @@ export default function MyLeads() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Мои заявки</h1>
-
       {leads.length === 0 ? (
         <div className="text-center py-20 bg-white rounded-2xl shadow">
           <p className="text-gray-500 text-lg mb-4">У вас пока нет заявок</p>
@@ -63,7 +62,6 @@ export default function MyLeads() {
               }`}
             >
               <div className="flex flex-col md:flex-row justify-between gap-4">
-
                 <div className="flex-1">
                   <div className="text-sm text-gray-500 mb-1">Автомобиль:</div>
                   <div className="font-bold text-lg text-gray-800 flex items-center gap-2">
@@ -80,7 +78,6 @@ export default function MyLeads() {
                 <div className="flex flex-col items-start md:items-end gap-2">
                   <div className="text-sm text-gray-500">Статус:</div>
                   {getStatusBadge(lead.status)}
-
                   {lead.comment && (
                     <div className="mt-2 text-sm bg-white p-2 rounded border border-gray-200 max-w-xs italic text-gray-600">
                       "{lead.comment}"

@@ -14,6 +14,7 @@ import Contacts from './pages/Contacts';
 import NotFound from './pages/NotFound';
 import AdminLeads from './pages/AdminLeads';
 import ProtectedRoute from './components/ProtectedRoute';
+ import Notifications from './pages/Notifications';
 
 function App() {
   return (
@@ -25,31 +26,27 @@ function App() {
         <Route path="/cars/:id" element={<CarDetail />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-
+        <Route path="/notifications" element={<Notifications />} />
         <Route path="/profile" element={
           <ProtectedRoute requiredRoles={['CLIENT', 'ADMIN', 'MANAGER']}>
             <UserProfile />
           </ProtectedRoute>
         } />
-
         <Route path="/my-leads" element={
           <ProtectedRoute requiredRoles={['CLIENT', 'ADMIN', 'MANAGER']}>
             <MyLeads />
           </ProtectedRoute>
         } />
-
         <Route path="/favorites" element={
           <ProtectedRoute requiredRoles={['CLIENT', 'ADMIN', 'MANAGER']}>
             <Favorites />
           </ProtectedRoute>
         } />
-
         <Route path="/admin/leads" element={
           <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER']}>
             <AdminLeads />
           </ProtectedRoute>
         } />
-
         <Route path="/admin" element={
           <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER']}>
             <div className="p-8 text-center">
@@ -58,7 +55,6 @@ function App() {
             </div>
           </ProtectedRoute>
         } />
-
         <Route path="/about" element={<About />} />
         <Route path="/contacts" element={<Contacts />} />
         <Route path="*" element={<NotFound />} />

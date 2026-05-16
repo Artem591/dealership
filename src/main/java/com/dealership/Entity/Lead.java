@@ -29,6 +29,7 @@ public class Lead {
     @JoinColumn(name = "car_id")
     private Car car;
 
+
     @Enumerated(EnumType.STRING)
     private LeadType type;
 
