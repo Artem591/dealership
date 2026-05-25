@@ -13,8 +13,9 @@ import About from './pages/About';
 import Contacts from './pages/Contacts';
 import NotFound from './pages/NotFound';
 import AdminLeads from './pages/AdminLeads';
+import AdminCars from './pages/AdminCars';
 import ProtectedRoute from './components/ProtectedRoute';
- import Notifications from './pages/Notifications';
+import Notifications from './pages/Notifications';
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/notifications" element={<Notifications />} />
+
         <Route path="/profile" element={
           <ProtectedRoute requiredRoles={['CLIENT', 'ADMIN', 'MANAGER']}>
             <UserProfile />
@@ -42,19 +44,23 @@ function App() {
             <Favorites />
           </ProtectedRoute>
         } />
+
         <Route path="/admin/leads" element={
           <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER']}>
             <AdminLeads />
           </ProtectedRoute>
         } />
-        <Route path="/admin" element={
+        <Route path="/admin/cars" element={
           <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER']}>
-            <div className="p-8 text-center">
-              <h1 className="text-3xl font-bold">Админ-панель</h1>
-              <p className="text-gray-600 mt-4">Здесь будет управление системой</p>
-            </div>
+            <AdminCars />
           </ProtectedRoute>
         } />
+        <Route path="/admin" element={
+          <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER']}>
+            <AdminCars />
+          </ProtectedRoute>
+        } />
+
         <Route path="/about" element={<About />} />
         <Route path="/contacts" element={<Contacts />} />
         <Route path="*" element={<NotFound />} />

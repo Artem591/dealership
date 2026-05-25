@@ -28,38 +28,25 @@ public class CarService {
     private final CarImageRepository imageRepository;
 
     public Page<CarResponse> getAllCars(Pageable pageable) {
-        return carRepository.findAll(pageable).map(car -> {
-            CarResponse response = carMapper.toResponse(car);
-            List<CarImage> images = imageRepository.findByCarIdOrderBySortOrder(car.getId());
-            response.setImages(images.stream()
-                    .map(carMapper::toImageDTO)
-                    .collect(Collectors.toList()));
-            return response;
-        });
+        return carRepository.findAll(pageable).map(car -> withImages(carMapper.toResponse(car), car));
     }
 
     public Page<CarResponse> getAvailableCars(Pageable pageable) {
-        return carRepository.findByStatus(CarStatus.AVAILABLE, pageable).map(car -> {
-            CarResponse response = carMapper.toResponse(car);
-            List<CarImage> images = imageRepository.findByCarIdOrderBySortOrder(car.getId());
-            response.setImages(images.stream()
-                    .map(carMapper::toImageDTO)
-                    .collect(Collectors.toList()));
-            return response;
-        });
+        return carRepository.findByStatus(CarStatus.AVAILABLE, pageable)
+                .map(car -> withImages(carMapper.toResponse(car), car));
     }
 
     public Page<CarResponse> filterCars(String make, String model,
                                         BigDecimal minPrice, BigDecimal maxPrice,
                                         Integer year, Pageable pageable) {
         return carRepository.filterCars(make, model, minPrice, maxPrice, year, pageable)
-                .map(carMapper::toResponse);
+                .map(car -> withImages(carMapper.toResponse(car), car));
     }
 
     public CarResponse getCarById(Long id) {
         Car car = carRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Car not found: " + id));
-        return carMapper.toResponse(car);
+        return withImages(carMapper.toResponse(car), car);
     }
 
     public List<CarImageDTO> getCarImages(Long carId) {
@@ -76,7 +63,8 @@ public class CarService {
         }
         Car car = carMapper.toEntity(request);
         car.setStatus(CarStatus.AVAILABLE);
-        return carMapper.toResponse(carRepository.save(car));
+        Car saved = carRepository.save(car);
+        return withImages(carMapper.toResponse(saved), saved);
     }
 
     @Transactional
@@ -84,11 +72,20 @@ public class CarService {
         Car car = carRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Car not found: " + id));
         carMapper.updateEntity(request, car);
-        return carMapper.toResponse(carRepository.save(car));
+        Car saved = carRepository.save(car);
+        return withImages(carMapper.toResponse(saved), saved);
     }
 
     @Transactional
     public void deleteCar(Long id) {
         carRepository.deleteById(id);
+    }
+
+    private CarResponse withImages(CarResponse response, Car car) {
+        List<CarImage> images = imageRepository.findByCarIdOrderBySortOrder(car.getId());
+        response.setImages(images.stream()
+                .map(carMapper::toImageDTO)
+                .collect(Collectors.toList()));
+        return response;
     }
 }

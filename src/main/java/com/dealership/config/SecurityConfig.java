@@ -4,6 +4,7 @@ import com.dealership.Service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -19,6 +20,7 @@ import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -41,11 +43,13 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/cars/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-
                         .requestMatchers("/ws/**", "/ws", "/websocket/**").permitAll()
-
+                        .requestMatchers("/uploads/**").permitAll()
+                        // Эндпоинт ошибок должен быть открыт
+                        .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/users/me").authenticated()
                         .requestMatchers("/api/leads/**").authenticated()
+                        .requestMatchers("/api/favorites/**").authenticated()
                         .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "MANAGER")
                         .anyRequest().authenticated()
                 )

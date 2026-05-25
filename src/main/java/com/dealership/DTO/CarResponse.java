@@ -21,6 +21,8 @@ public class CarResponse {
     private String transmission;
     private String color;
     private String bodyType;
+    private BigDecimal engineVolume;
+    private Integer power;
     private String status;
     private Boolean isNew;
     private String description;

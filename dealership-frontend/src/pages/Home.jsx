@@ -16,7 +16,6 @@ export default function Home() {
 
   return (
     <div>
-      {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-24">
         <div className="max-w-7xl mx-auto px-8">
           <div className="max-w-3xl">
@@ -46,7 +45,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Преимущества */}
       <div className="bg-gray-50 py-20">
         <div className="max-w-7xl mx-auto px-8">
           <div className="grid grid-cols-3 gap-12">
@@ -75,7 +73,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Популярные автомобили */}
       <div className="max-w-7xl mx-auto px-8 py-20">
         <h2 className="text-4xl font-bold mb-12 text-center">Популярные автомобили</h2>
 
@@ -83,32 +80,43 @@ export default function Home() {
           <div className="text-center text-2xl">Загрузка...</div>
         ) : (
           <div className="grid grid-cols-3 gap-8">
-            {cars.slice(0, 6).map(car => (
-              <Link
-                key={car.id}
-                to={`/cars/${car.id}`}
-                className="bg-white border-2 rounded-xl overflow-hidden hover:shadow-2xl transition group"
-              >
-                <div className="h-56 bg-gray-200 flex items-center justify-center">
-                  <Car className="text-gray-400" size={80} />
-                </div>
-                <div className="p-8">
-                  <h3 className="text-2xl font-bold mb-3 group-hover:text-blue-600 transition">
-                    {car.make} {car.model}
-                  </h3>
-                  <div className="flex justify-between text-gray-600 text-lg mb-6">
-                    <span>{car.year} год</span>
-                    <span>{car.mileage?.toLocaleString()} км</span>
+            {cars.slice(0, 6).map(car => {
+              const firstImage = car.images && car.images.length > 0 ? car.images[0].imageUrl : null;
+              return (
+                <Link
+                  key={car.id}
+                  to={`/cars/${car.id}`}
+                  className="bg-white border-2 rounded-xl overflow-hidden hover:shadow-2xl transition group"
+                >
+                  <div className="h-56 bg-gray-200 flex items-center justify-center overflow-hidden relative">
+                    {firstImage ? (
+                      <img
+                        src={firstImage}
+                        alt={`${car.make} ${car.model}`}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <Car className="text-gray-400" size={80} />
+                    )}
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-3xl font-bold text-green-600">
-                      {car.price?.toLocaleString('ru-RU')} ₽
-                    </span>
-                    <span className="text-blue-600 font-medium text-lg">Подробнее →</span>
+                  <div className="p-8">
+                    <h3 className="text-2xl font-bold mb-3 group-hover:text-blue-600 transition">
+                      {car.make} {car.model}
+                    </h3>
+                    <div className="flex justify-between text-gray-600 text-lg mb-6">
+                      <span>{car.year} год</span>
+                      <span>{car.mileage?.toLocaleString()} км</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-3xl font-bold text-green-600">
+                        {car.price?.toLocaleString('ru-RU')} ₽
+                      </span>
+                      <span className="text-blue-600 font-medium text-lg">Подробнее →</span>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         )}
 

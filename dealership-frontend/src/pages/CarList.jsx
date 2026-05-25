@@ -35,7 +35,6 @@ export default function CarList() {
     <div className="max-w-7xl mx-auto px-8 py-12">
       <h1 className="text-5xl font-bold mb-10">Каталог автомобилей</h1>
 
-      {/* Фильтры */}
       <div className="mb-8 p-8 bg-gray-50 rounded-xl border-2">
         <div className="flex items-center gap-4 mb-6">
           <Filter size={28} className="text-blue-600" />
@@ -73,7 +72,6 @@ export default function CarList() {
         </div>
       </div>
 
-      {/* Результаты */}
       {loading ? (
         <div className="text-center text-2xl py-16">Загрузка...</div>
       ) : (
@@ -83,46 +81,57 @@ export default function CarList() {
           </div>
 
           <div className="grid grid-cols-3 gap-8">
-            {cars.map(car => (
-              <Link
-                key={car.id}
-                to={`/cars/${car.id}`}
-                className="bg-white border-2 rounded-xl overflow-hidden hover:shadow-2xl transition group"
-              >
-                <div className="h-64 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center relative">
-                  <Car className="text-gray-400" size={100} />
-                  {car.isNew && (
-                    <span className="absolute top-6 left-6 bg-green-500 text-white px-4 py-2 rounded-full text-lg font-bold">
-                      Новый
-                    </span>
-                  )}
-                </div>
-                <div className="p-8">
-                  <h3 className="text-3xl font-bold mb-4 group-hover:text-blue-600 transition">
-                    {car.make} {car.model}
-                  </h3>
-                  <div className="space-y-3 mb-6 text-lg">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Год:</span>
-                      <span className="font-bold">{car.year}</span>
+            {cars.map(car => {
+              const firstImage = car.images && car.images.length > 0 ? car.images[0].imageUrl : null;
+              return (
+                <Link
+                  key={car.id}
+                  to={`/cars/${car.id}`}
+                  className="bg-white border-2 rounded-xl overflow-hidden hover:shadow-2xl transition group"
+                >
+                  <div className="h-64 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center relative overflow-hidden">
+                    {firstImage ? (
+                      <img
+                        src={firstImage}
+                        alt={`${car.make} ${car.model}`}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <Car className="text-gray-400" size={100} />
+                    )}
+                    {car.isNew && (
+                      <span className="absolute top-6 left-6 bg-green-500 text-white px-4 py-2 rounded-full text-lg font-bold">
+                        Новый
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-8">
+                    <h3 className="text-3xl font-bold mb-4 group-hover:text-blue-600 transition">
+                      {car.make} {car.model}
+                    </h3>
+                    <div className="space-y-3 mb-6 text-lg">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Год:</span>
+                        <span className="font-bold">{car.year}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Пробег:</span>
+                        <span className="font-bold">{car.mileage?.toLocaleString() || 0} км</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Коробка:</span>
+                        <span className="font-bold">{car.transmission}</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Пробег:</span>
-                      <span className="font-bold">{car.mileage?.toLocaleString() || 0} км</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Коробка:</span>
-                      <span className="font-bold">{car.transmission}</span>
+                    <div className="pt-6 border-t-2">
+                      <span className="text-4xl font-bold text-green-600">
+                        {car.price?.toLocaleString('ru-RU')} ₽
+                      </span>
                     </div>
                   </div>
-                  <div className="pt-6 border-t-2">
-                    <span className="text-4xl font-bold text-green-600">
-                      {car.price?.toLocaleString('ru-RU')} ₽
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         </>
       )}

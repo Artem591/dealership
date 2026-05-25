@@ -3,11 +3,9 @@ package com.dealership.Controller;
 import com.dealership.DTO.ApiResponse;
 import com.dealership.Service.FavoriteService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.dealership.Entity.Car;
 
 @RestController
 @RequestMapping("/api/favorites")
@@ -24,13 +22,11 @@ public class FavoriteController {
 
     @GetMapping
     public ResponseEntity<ApiResponse> getFavorites(Pageable pageable) {
-        Page<Car> favorites = favoriteService.getFavorites(pageable);
-        return ResponseEntity.ok(ApiResponse.success(favorites));
+        return ResponseEntity.ok(ApiResponse.success(favoriteService.getFavorites(pageable)));
     }
 
     @GetMapping("/cars/{carId}/status")
     public ResponseEntity<ApiResponse> checkStatus(@PathVariable Long carId) {
-        boolean isFav = favoriteService.isFavorite(carId);
-        return ResponseEntity.ok(ApiResponse.success(isFav));
+        return ResponseEntity.ok(ApiResponse.success(favoriteService.isFavorite(carId)));
     }
 }

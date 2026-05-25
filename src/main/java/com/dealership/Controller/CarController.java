@@ -1,17 +1,22 @@
 package com.dealership.Controller;
 
 import com.dealership.DTO.*;
+import com.dealership.Entity.CarImage;
 import com.dealership.Entity.User;
+import com.dealership.Repository.CarImageRepository;
 import com.dealership.Repository.UserRepository;
 import com.dealership.Service.CarService;
+import com.dealership.Service.FileStorageService;
 import com.dealership.Service.LeadService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -24,6 +29,9 @@ public class CarController {
     private final CarService carService;
     private final UserRepository userRepository;
     private final LeadService leadService;
+    private final FileStorageService fileStorageService;
+    private final CarImageRepository carImageRepository;
+
 
     @GetMapping
     public ResponseEntity<Page<CarResponse>> getAllCars(Pageable pageable) {
@@ -56,32 +64,70 @@ public class CarController {
         return ResponseEntity.ok(carService.getCarImages(id));
     }
 
+    @PostMapping("/{id}/lead")
+    public ResponseEntity<ApiResponse> createLead(
+            @PathVariable Long id,
+            @RequestBody LeadRequest request) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+        leadService.createLead(id, user.getId(), request);
+        return ResponseEntity.ok(ApiResponse.success("Заявка успешно создана!"));
+    }
+
+
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<CarResponse> createCar(@Valid @RequestBody CarRequest request) {
         return ResponseEntity.ok(carService.createCar(request));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CarResponse> updateCar(@PathVariable Long id, @Valid @RequestBody CarRequest request) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<CarResponse> updateCar(@PathVariable Long id,
+                                                 @Valid @RequestBody CarRequest request) {
         return ResponseEntity.ok(carService.updateCar(id, request));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Void> deleteCar(@PathVariable Long id) {
         carService.deleteCar(id);
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/{id}/lead")
-    public ResponseEntity<ApiResponse> createLead(
+    @PostMapping("/{id}/images")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<ApiResponse> uploadCarImage(
             @PathVariable Long id,
-            @RequestBody LeadRequest request) {
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "imageType", defaultValue = "gallery") String imageType,
+            @RequestParam(value = "sortOrder", defaultValue = "0") Integer sortOrder) {
 
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+        String imageUrl = fileStorageService.storeFile(file);
 
-        leadService.createLead(id, user.getId(), request);
-        return ResponseEntity.ok(ApiResponse.success("Заявка успешно создана!"));
+        com.dealership.Entity.Car car = new com.dealership.Entity.Car();
+        car.setId(id);
+
+        CarImage image = CarImage.builder()
+                .car(car)
+                .imageUrl(imageUrl)
+                .imageType(imageType)
+                .sortOrder(sortOrder)
+                .build();
+
+        carImageRepository.save(image);
+        return ResponseEntity.ok(ApiResponse.success("Изображение загружено", imageUrl));
+    }
+
+    @DeleteMapping("/{carId}/images/{imageId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<ApiResponse> deleteCarImage(@PathVariable Long carId,
+                                                      @PathVariable Long imageId) {
+        carImageRepository.findById(imageId).ifPresent(img -> {
+            fileStorageService.deleteFile(img.getImageUrl());
+            carImageRepository.deleteById(imageId);
+        });
+        return ResponseEntity.ok(ApiResponse.success("Изображение удалено"));
     }
 }
