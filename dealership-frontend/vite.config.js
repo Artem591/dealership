@@ -7,6 +7,7 @@ export default defineConfig({
     global: 'globalThis',
   },
   server: {
+    host: '0.0.0.0',
     port: 3000,
     proxy: {
       '/api': {
@@ -17,12 +18,15 @@ export default defineConfig({
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
-      '/unsplash': {
-        target: 'https://images.unsplash.com',
+      '/ws': {
+        target: 'ws://localhost:8080',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/unsplash/, ''),
-        secure: false,
-      }
+        ws: true,
+      },
     }
+  },
+  preview: {
+    host: '0.0.0.0',
+    port: 3000,
   },
 })
